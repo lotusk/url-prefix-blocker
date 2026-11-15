@@ -1,8 +1,15 @@
 {
   "manifest_version": 3,
   "name": "URL Prefix Blocker",
-  "version": "1.0.0",
-  "description": "Block pages whose URL starts with a prefix from your list.",
+  "version": "1.0.1",
+  "description": "Block pages whose URL starts with a prefix from your list, like youtube.com/shorts.",
+  "homepage_url": "https://github.com/lotusk/url-prefix-blocker",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
   "permissions": ["storage", "tabs", "webNavigation"],
   "background": {
     "service_worker": "background.js",
@@ -10,6 +17,10 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "URL Prefix Blocker"
+    "default_title": "URL Prefix Blocker",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
   }
 }

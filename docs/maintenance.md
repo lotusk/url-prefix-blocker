@@ -51,17 +51,31 @@ No host permissions and no content scripts. The extension never reads page conte
 - a `pushState` to `/shorts/...` is blocked
 - saving a new list in the popup works and takes effect
 
-It uses the `--remote-debugging-pipe` and `--enable-unsafe-extension-debugging` flags,
-because recent Chrome versions ignore `--load-extension`.
-The temporary profile is deleted when the test ends. Set `CHROME_PATH` if Chrome is not in `/Applications`.
+Chrome is driven by `scripts/lib/chrome.mjs`. It uses the `--remote-debugging-pipe` and
+`--enable-unsafe-extension-debugging` flags, because recent Chrome versions ignore `--load-extension`.
+The temporary profile is deleted at the end. Set `CHROME_PATH` if Chrome is not in `/Applications`.
 
 The test depends on the live YouTube site. If the click test prints `SKIP`, YouTube changed its markup and the selector in `e2e.mjs` needs an update.
 
+## Icons and store images
+
+`npm run assets` redraws everything from `store/src/`:
+
+- `extension/icons/icon-{16,32,48,128}.png` from `icon.svg`. The 128px icon keeps 16px of empty space around the artwork, as Chrome asks.
+- `store/screenshot-1.png` and `store/screenshot-2.png` (1280x800). They use real captures of the popup and the blocked page, so run this again after changing those pages.
+- `store/promo-small.png` (440x280).
+
+To change the look, edit the files in `store/src/` and run the command again. Do not put the YouTube logo in any image.
+
 ## Release
 
-1. Bump `version` in `extension/manifest.json`.
+1. Bump `version` in `extension/manifest.json` and `package.json`.
 2. Run `npm test` and `npm run test:e2e`.
-3. Run `npm run pack`.
-4. Create a GitHub release and attach the zip from `dist/`.
+3. If the popup or blocked page changed, run `npm run assets`.
+4. Run `npm run pack`.
+5. Chrome Web Store: open the item in the developer dashboard, go to **Package**, upload the new zip, and submit for review.
+   Text for the listing and the privacy tab is in `store/listing.md`.
+6. Create a GitHub release and attach the same zip.
 
+Users who installed from the store get the update by themselves after review.
 Users with the unpacked version have to replace the folder and click reload in `chrome://extensions`.

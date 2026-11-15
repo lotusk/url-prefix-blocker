@@ -3,42 +3,94 @@
   <head>
     <meta charset="utf-8" />
     <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #0f172a;
+        --muted: #64748b;
+        --border: #cbd5e1;
+        --field: #f8fafc;
+        --accent: #e11d48;
+        --ok: #15803d;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f172a;
+          --fg: #e2e8f0;
+          --muted: #94a3b8;
+          --border: #334155;
+          --field: #1e293b;
+          --accent: #fb7185;
+          --ok: #4ade80;
+        }
+      }
       body {
         width: 300px;
-        margin: 12px;
+        margin: 0;
+        padding: 14px;
         font: 13px system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      header img {
+        width: 20px;
+        height: 20px;
       }
       h1 {
         font-size: 14px;
-        margin: 0 0 4px;
+        margin: 0;
       }
       p {
-        margin: 0 0 8px;
-        color: #666;
+        margin: 0 0 10px;
+        color: var(--muted);
       }
       textarea {
         width: 100%;
-        height: 140px;
+        height: 150px;
         box-sizing: border-box;
-        font: 12px ui-monospace, monospace;
-        padding: 6px;
+        font: 12px/1.6 ui-monospace, monospace;
+        padding: 8px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--field);
+        color: var(--fg);
+        resize: vertical;
+      }
+      textarea:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: -1px;
       }
       .row {
         display: flex;
         align-items: center;
-        gap: 8px;
-        margin-top: 8px;
+        gap: 10px;
+        margin-top: 10px;
       }
       button {
-        padding: 4px 14px;
+        padding: 6px 16px;
+        border: 0;
+        border-radius: 6px;
+        background: var(--accent);
+        color: #fff;
+        font: 600 13px system-ui, sans-serif;
+        cursor: pointer;
       }
       #status {
-        color: #1a7f37;
+        color: var(--ok);
       }
     </style>
   </head>
   <body>
-    <h1>Blocked prefixes</h1>
+    <header>
+      <img src="icons/icon-32.png" alt="" />
+      <h1>Blocked prefixes</h1>
+    </header>
     <p>One per line, for example youtube.com/shorts</p>
     <textarea id="list" spellcheck="false"></textarea>
     <div class="row">

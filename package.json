@@ -1,12 +1,13 @@
 {
   "name": "url-prefix-blocker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "Chrome extension that blocks pages by URL prefix, like youtube.com/shorts.",
   "scripts": {
     "test": "node --test tests/*.test.js",
     "test:e2e": "node tests/e2e.mjs",
+    "assets": "node scripts/store-assets.mjs",
     "pack": "sh scripts/pack.sh"
   }
 }

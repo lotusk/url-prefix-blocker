@@ -1,99 +1,11 @@
-// Loads the extension into a throwaway headless Chrome profile and checks
-// blocking on the live YouTube site. Your normal Chrome profile is not touched.
-import { spawn } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+// Loads the extension into a throwaway headless Chrome and checks blocking on the live YouTube site.
+import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { launchChrome, sleep } from "../scripts/lib/chrome.mjs";
 
-const CHROME =
-  process.env.CHROME_PATH ??
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const extDir = resolve(fileURLToPath(import.meta.url), "../../extension");
-const profileDir = mkdtempSync(join(tmpdir(), "upb-e2e-"));
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-const chrome = spawn(
-  CHROME,
-  [
-    "--headless=new",
-    `--user-data-dir=${profileDir}`,
-    "--remote-debugging-pipe",
-    "--enable-unsafe-extension-debugging",
-    "--no-first-run",
-    "--no-default-browser-check",
-    "about:blank",
-  ],
-  { stdio: ["ignore", "ignore", "ignore", "pipe", "pipe"] }
-);
-const toChrome = chrome.stdio[3];
-const fromChrome = chrome.stdio[4];
-
-let nextId = 1;
-const pending = new Map();
-let buf = Buffer.alloc(0);
-fromChrome.on("data", (chunk) => {
-  buf = Buffer.concat([buf, chunk]);
-  let i;
-  while ((i = buf.indexOf(0)) !== -1) {
-    const msg = JSON.parse(buf.subarray(0, i).toString());
-    buf = buf.subarray(i + 1);
-    if (msg.id && pending.has(msg.id)) {
-      const { resolve, reject } = pending.get(msg.id);
-      pending.delete(msg.id);
-      msg.error ? reject(new Error(JSON.stringify(msg.error))) : resolve(msg.result);
-    }
-  }
-});
-
-function send(method, params = {}, sessionId) {
-  const id = nextId++;
-  return new Promise((resolve, reject) => {
-    pending.set(id, { resolve, reject });
-    toChrome.write(JSON.stringify({ id, method, params, sessionId }) + "\0");
-  });
-}
-
-async function quit(code) {
-  await send("Browser.close").catch(() => {});
-  await sleep(1500);
-  chrome.kill();
-  rmSync(profileDir, { recursive: true, force: true });
-  process.exit(code);
-}
-
-async function open(url) {
-  const { targetId } = await send("Target.createTarget", { url });
-  const { sessionId } = await send("Target.attachToTarget", { targetId, flatten: true });
-  return { targetId, sessionId };
-}
-
-async function urlOf(page) {
-  return (await send("Target.getTargetInfo", { targetId: page.targetId })).targetInfo.url;
-}
-
-async function evalIn(page, expression) {
-  const r = await send(
-    "Runtime.evaluate",
-    { expression, awaitPromise: true, returnByValue: true },
-    page.sessionId
-  );
-  if (r.exceptionDetails) throw new Error(r.exceptionDetails.text);
-  return r.result.value;
-}
-
-async function waitUrl(page, pred, ms = 10000) {
-  const end = Date.now() + ms;
-  let u;
-  while (Date.now() < end) {
-    u = await urlOf(page);
-    if (pred(u)) return u;
-    await sleep(250);
-  }
-  return u;
-}
-
-const close = (page) => send("Target.closeTarget", { targetId: page.targetId });
+const chrome = await launchChrome();
+const { open, close, urlOf, evalIn, waitUrl } = chrome;
 
 const results = [];
 function report(name, ok, detail) {
@@ -101,15 +13,19 @@ function report(name, ok, detail) {
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}  ->  ${detail}`);
 }
 
-await sleep(1500);
-console.log((await send("Browser.getVersion")).product);
+async function finish(code) {
+  await chrome.quit();
+  process.exit(code);
+}
+
+console.log(chrome.version);
 
 let extId;
 try {
-  extId = (await send("Extensions.loadUnpacked", { path: extDir })).id;
+  extId = await chrome.loadExtension(extDir);
 } catch (e) {
   console.log("FAIL  could not load extension", e.message);
-  await quit(1);
+  await finish(1);
 }
 await sleep(1500);
 
@@ -200,4 +116,4 @@ const isBlockedPage = (u) => u.startsWith(blockedPage);
 
 const failed = results.filter((r) => !r).length;
 console.log(failed ? `${failed} of ${results.length} failed` : `all ${results.length} passed`);
-await quit(failed ? 1 : 0);
+await finish(failed ? 1 : 0);
