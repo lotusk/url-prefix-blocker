@@ -60,4 +60,3 @@ More details are in [docs/maintenance.md](docs/maintenance.md).
 - Anyone with access to `chrome://extensions` can turn the extension off or remove it.
 - After a block from inside YouTube (clicking a Short), the Back button lands on the Shorts URL again and gets blocked. Press Back twice.
 - It only checks the URL. The Shorts shelf on the YouTube home page still shows, but clicking a Short is blocked.
-# url-prefix-blocker
