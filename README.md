@@ -1,0 +1,63 @@
+# URL Prefix Blocker
+
+A small Chrome extension that blocks pages by URL prefix.
+The default list blocks YouTube Shorts (`youtube.com/shorts`) and leaves the rest of YouTube alone.
+
+## Install
+
+1. Download the zip from Releases, or run `npm run pack` and use the zip in `dist/`.
+2. Unzip it to a folder that will stay. Chrome loads the extension from that folder.
+3. Open `chrome://extensions` and turn on **Developer mode** (top right).
+4. Click **Load unpacked** and pick the unzipped folder.
+5. Optional: open **Details** and turn on **Allow in Incognito**. It is off by default.
+
+It also works in Edge and Brave the same way.
+
+## Use
+
+Click the extension icon, put one prefix per line, then click **Save**.
+
+| You type | What gets blocked |
+|---|---|
+| `youtube.com/shorts` | Shorts on `www.`, `m.` and any other YouTube subdomain |
+| `reddit.com` | The whole site, all subdomains |
+| `https://www.Example.com/` | Same as `example.com` (scheme, `www.`, case and trailing `/` are removed) |
+
+Blocked pages are replaced with a plain "This page is blocked" screen.
+
+## Project layout
+
+```
+extension/      the extension itself (this is what gets zipped)
+  manifest.json
+  match.js      prefix rules, shared by background and popup
+  background.js watches tab navigation and redirects blocked pages
+  popup.*       the list editor
+  blocked.*     the page shown instead of a blocked URL
+tests/
+  match.test.js unit tests for match.js
+  e2e.mjs       loads the extension in a headless Chrome and tests live YouTube
+scripts/pack.sh builds dist/url-prefix-blocker-<version>.zip
+docs/           notes for maintaining the project
+```
+
+## Development
+
+Needs Node and Google Chrome (tested with Node 26 and Chrome 157). There are no npm dependencies.
+
+```bash
+npm test          # unit tests
+npm run test:e2e  # real browser test, needs network
+npm run pack      # build the zip
+```
+
+After you change a file, go to `chrome://extensions` and click the reload icon on the extension card.
+
+More details are in [docs/maintenance.md](docs/maintenance.md).
+
+## Known limits
+
+- Anyone with access to `chrome://extensions` can turn the extension off or remove it.
+- After a block from inside YouTube (clicking a Short), the Back button lands on the Shorts URL again and gets blocked. Press Back twice.
+- It only checks the URL. The Shorts shelf on the YouTube home page still shows, but clicking a Short is blocked.
+# url-prefix-blocker
